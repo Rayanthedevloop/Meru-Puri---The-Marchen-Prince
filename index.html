@@ -61,12 +61,12 @@
       <div class="chap-nav">
         <button class="chap-arrow" id="prevChapBtn" onclick="changeChapter(-1)" disabled>‹</button>
         <select id="chapterSelect" onchange="loadChapter(parseInt(this.value))">
-          <option value="1" selected>Chapitre 1</option>
-          <option value="2">Chapitre 2</option>
-          <option value="3">Chapitre 3</option>
-          <option value="4">Chapitre 4</option>
-          <option value="5">Chapitre 5</option>
-          <option value="6">Chapitre 6</option>
+          <option value="1" selected>Tome 1 (Chapitre 1)</option>
+          <option value="2">Tome 1 (Chapitre 2)</option>
+          <option value="3">Tome 1 (Chapitre 3)</option>
+          <option value="4">Tome 1 (Chapitre 4)</option>
+          <option value="5">Tome 1 (Chapitre 5)</option>
+          <option value="6">Tome 2 (Chapitre 6)</option>
         </select>
         <button class="chap-arrow" id="nextChapBtn" onclick="changeChapter(1)">›</button>
       </div>
@@ -87,7 +87,7 @@
 
 <script>
 // Nombre de pages par chapitre
-const chapterPageCounts = { 1: 22, 2: 16, 3: 17, 4: 16, 5: 21, 6: 20 };
+const chapterPageCounts = { 1: 24, 2: 16, 3: 17, 4: 16, 5: 21, 6: 20 };
 const totalChapters = 6;
 let currentMode = 'scroll', currentPage = 0, currentChapter = 1;
 
