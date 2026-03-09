@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lecteur — MangaStream</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0a0a0a;
+  --bg2:     #141414;
+  --bg3:     #1e1e1e;
+  --border:  #2a2a2a;
+  --orange:  #f47521;
+  --orange2: #ff9244;
+  --white:   #f0f0f0;
+  --grey1:   #b0b0b0;
+  --grey2:   #707070;
+  --font-head:'Bebas Neue', sans-serif;
+  --font-ui:  'Rajdhani', sans-serif;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--white); font-family:var(--font-ui); overflow-x:hidden; }
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--orange); border-radius:3px; }
+
+/* TOP BAR */
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:900;
+  height:54px;
+  background:rgba(10,10,10,0.97);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px; gap:16px;
+}
+.topbar-left { display:flex; align-items:center; gap:12px; min-width:0; flex:1; }
+.back-btn {
+  display:flex; align-items:center; gap:6px;
+  background:var(--bg3); border:1px solid var(--border);
+  color:var(--grey1); cursor:pointer;
+  font-family:var(--font-ui); font-size:13px; font-weight:600;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:7px 14px; border-radius:6px; transition:all .2s;
+  white-space:nowrap; flex-shrink:0; text-decoration:none;
+}
+.back-btn:hover { border-color:var(--orange); color:var(--orange); }
+.topbar-title {
+  font-family:var(--font-head); font-size:17px; letter-spacing:2px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.topbar-title span { color:var(--orange); margin-left:8px; font-size:15px; }
+.topbar-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+
+.ch-select {
+  background:var(--bg3); border:1px solid var(--border);
+  color:var(--white); font-family:var(--font-ui);
+  font-size:13px; font-weight:600; letter-spacing:1px;
+  padding:7px 12px; border-radius:6px; cursor:pointer; outline:none;
+  transition:border-color .2s;
+}
+.ch-select:focus { border-color:var(--orange); }
+
+.icon-btn {
+  background:var(--bg3); border:1px solid var(--border);
+  color:var(--grey1); cursor:pointer;
+  font-family:var(--font-ui); font-size:12px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:7px 14px; border-radius:6px; transition:all .2s;
+  white-space:nowrap; display:flex; align-items:center; gap:6px;
+}
+.icon-btn:hover, .icon-btn.on { border-color:var(--orange); color:var(--orange); }
+
+/* CONTENT */
+#content { padding-top:54px; min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+
+/* LOADER */
+.loader {
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:16px; height:calc(100vh - 54px);
+}
+.loader-ring {
+  width:44px; height:44px; border:3px solid var(--border);
+  border-top-color:var(--orange); border-radius:50%;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loader p { font-size:14px; color:var(--grey2); letter-spacing:1px; }
+
+/* ERROR */
+.err {
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:14px;
+  height:calc(100vh - 54px); text-align:center; padding:32px;
+}
+.err-ico { font-size:52px; opacity:.25; }
+.err h2 { font-family:var(--font-head); font-size:28px; letter-spacing:2px; }
+.err p  { font-size:13px; color:var(--grey2); max-width:420px; line-height:1.6; }
+
+/* SCROLL MODE */
+.scroll-wrap {
+  width:100%; max-width:840px;
+  display:flex; flex-direction:column; align-items:center;
+  padding:16px 8px 40px; gap:2px;
+}
+.p-img { width:100%; display:block; height:auto; }
+.p-img.skeleton { min-height:300px; background:var(--bg2); }
+
+/* PAGED MODE */
+.paged-wrap {
+  width:100%; display:flex; align-items:center; justify-content:center;
+  padding:16px 8px; flex:1;
+}
+.paged-wrap .p-img { max-width:840px; max-height:calc(100vh - 54px - 60px); width:auto; object-fit:contain; }
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position:sticky; bottom:0; width:100%;
+  background:rgba(10,10,10,0.97); backdrop-filter:blur(10px);
+  border-top:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  gap:16px; padding:9px 24px; z-index:800;
+}
+.nav-btn {
+  display:flex; align-items:center; gap:6px;
+  background:var(--bg3); border:1px solid var(--border);
+  color:var(--grey1); cursor:pointer;
+  font-family:var(--font-ui); font-size:13px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:8px 18px; border-radius:6px; transition:all .2s;
+}
+.nav-btn:hover:not(:disabled) { border-color:var(--orange); color:var(--orange); }
+.nav-btn:disabled { opacity:.3; cursor:not-allowed; }
+.pg-info { font-size:13px; color:var(--grey2); min-width:88px; text-align:center; letter-spacing:1px; }
+
+/* SIDEBAR */
+.sidebar {
+  position:fixed; top:54px; right:0; bottom:0; z-index:700;
+  width:260px; background:var(--bg2); border-left:1px solid var(--border);
+  transform:translateX(100%); transition:transform .28s ease;
+  overflow-y:auto; padding-bottom:20px;
+}
+.sidebar.open { transform:translateX(0); }
+.sidebar h3 {
+  font-family:var(--font-head); font-size:17px; letter-spacing:2px;
+  padding:16px 18px; border-bottom:1px solid var(--border); position:sticky; top:0;
+  background:var(--bg2);
+}
+.ch-row {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:11px 18px; cursor:pointer; border-bottom:1px solid rgba(42,42,42,.5);
+  transition:background .15s;
+}
+.ch-row:hover { background:rgba(244,117,33,.07); }
+.ch-row.active { background:rgba(244,117,33,.13); }
+.ch-row span { font-size:14px; font-weight:600; letter-spacing:1px; color:var(--grey1); }
+.ch-row.active span { color:var(--orange); }
+
+@media(max-width:600px) {
+  .topbar-title { font-size:13px; }
+  .topbar { padding:0 10px; gap:6px; }
+  .icon-btn .lbl { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="index.html" class="back-btn">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Retour
+    </a>
+    <div class="topbar-title" id="topTitle">…<span id="topCh"></span></div>
+  </div>
+  <div class="topbar-right">
+    <select class="ch-select" id="chSel" onchange="loadChapter(this.value)"></select>
+    <button class="icon-btn" id="modeBtn" onclick="toggleMode()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+      <span class="lbl">Scroll</span>
+    </button>
+    <button class="icon-btn" onclick="toggleSidebar()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="sidebar" id="sidebar">
+  <h3>CHAPITRES</h3>
+  <div id="sideList"></div>
+</div>
+
+<div id="content">
+  <div class="loader"><div class="loader-ring"></div><p>Chargement…</p></div>
+</div>
+
+<script>
+// ── PARAMS ──────────────────────────────────────────────────────────
+const params = new URLSearchParams(window.location.search);
+const FOLDER = params.get('folder') || '';
+const TITLE  = decodeURIComponent(params.get('title') || FOLDER);
+
+// Base URL automatique — fonctionne partout sans rien configurer
+const BASE = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '');
+
+document.getElementById('topTitle').childNodes[0].textContent = TITLE;
+
+// ── STATE ────────────────────────────────────────────────────────────
+let chapters = [], curCh = 0, pages = [], curPage = 0, scrollMode = true;
+
+// ── 1. FETCH CHAPTER LIST ────────────────────────────────────────────
+async function init() {
+  try {
+    const html = await fetchHTML(`${BASE}/${FOLDER}/`);
+    const links = parseLinks(html).filter(n => /^ch\d/i.test(n));
+    chapters = links.sort(natSort);
+    if (!chapters.length) throw new Error('Aucun dossier ch* trouvé dans ' + FOLDER);
+    buildChapterUI();
+    loadChapter(chapters[0]);
+  } catch(e) {
+    showErr('Chapitres introuvables',
+      `Vérifie que le dossier <b>${FOLDER}/</b> existe dans ton repo GitHub Pages et que le listing de dossiers est activé.<br><br><small>${e.message}</small>`);
+  }
+}
+
+// ── 2. LOAD CHAPTER ──────────────────────────────────────────────────
+async function loadChapter(ch) {
+  curCh = chapters.indexOf(ch); curPage = 0; pages = [];
+  showLoader();
+  document.getElementById('topCh').textContent = ' · ' + ch.toUpperCase();
+  document.getElementById('chSel').value = ch;
+  document.querySelectorAll('.ch-row').forEach(r => r.classList.toggle('active', r.dataset.ch === ch));
+
+  try {
+    const html = await fetchHTML(`${BASE}/${FOLDER}/${ch}/`);
+    const imgs = parseLinks(html).filter(n => /\.(jpe?g|png|webp|gif|avif)$/i.test(n));
+    pages = imgs.sort(natSort).map(name => `${BASE}/${FOLDER}/${ch}/${name}`);
+    if (!pages.length) throw new Error('Aucune image dans ce chapitre');
+    render();
+  } catch(e) {
+    showErr('Chapitre vide', `Impossible de charger <b>${ch}</b>.<br><small>${e.message}</small>`);
+  }
+}
+
+// ── 3. RENDER ────────────────────────────────────────────────────────
+function render() {
+  const c = document.getElementById('content');
+  c.innerHTML = '';
+
+  if (scrollMode) {
+    const wrap = el('div', 'scroll-wrap');
+    pages.forEach((src, i) => {
+      const img = el('img', 'p-img skeleton');
+      img.src = src; img.alt = `Page ${i+1}`; img.loading = 'lazy';
+      img.onload = () => img.classList.remove('skeleton');
+      wrap.appendChild(img);
+    });
+    c.appendChild(wrap);
+    c.appendChild(bottomNav(true));
+  } else {
+    const wrap = el('div', 'paged-wrap');
+    const img = el('img', 'p-img'); img.id = 'pImg'; img.src = pages[0]; img.alt = 'Page 1';
+    wrap.appendChild(img);
+    c.appendChild(wrap);
+    c.appendChild(bottomNav(false));
+    updatePaged();
+  }
+}
+
+function bottomNav(isScroll) {
+  const nav = el('div', 'bottom-nav'); nav.id = 'bNav';
+  if (isScroll) {
+    nav.innerHTML = `
+      <button class="nav-btn" id="bPrev" onclick="prevCh()">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        Ch. précédent
+      </button>
+      <span class="pg-info">${chapters[curCh].toUpperCase()}</span>
+      <button class="nav-btn" id="bNext" onclick="nextCh()">
+        Ch. suivant
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </button>`;
+    nav.querySelector('#bPrev').disabled = curCh === 0;
+    nav.querySelector('#bNext').disabled = curCh === chapters.length - 1;
+  } else {
+    nav.innerHTML = `
+      <button class="nav-btn" id="bPrev" onclick="prevPage()">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        Précédent
+      </button>
+      <span class="pg-info" id="pgInfo">— / —</span>
+      <button class="nav-btn" id="bNext" onclick="nextPage()">
+        Suivant
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </button>`;
+  }
+  return nav;
+}
+
+function updatePaged() {
+  const img = document.getElementById('pImg');
+  if (img) { img.src = pages[curPage]; img.alt = `Page ${curPage+1}`; }
+  const info = document.getElementById('pgInfo');
+  if (info) info.textContent = `${curPage+1} / ${pages.length}`;
+  const prev = document.getElementById('bPrev');
+  const next = document.getElementById('bNext');
+  if (prev) prev.disabled = curPage === 0 && curCh === 0;
+  if (next) next.disabled = curPage === pages.length-1 && curCh === chapters.length-1;
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────────
+function prevPage() { if (curPage > 0) { curPage--; updatePaged(); scrollTop(); } else prevCh(); }
+function nextPage() { if (curPage < pages.length-1) { curPage++; updatePaged(); scrollTop(); } else nextCh(); }
+function prevCh()   { if (curCh > 0) loadChapter(chapters[curCh-1]); }
+function nextCh()   { if (curCh < chapters.length-1) loadChapter(chapters[curCh+1]); }
+function scrollTop(){ window.scrollTo({top:0}); }
+
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key==='ArrowDown') scrollMode ? nextCh() : nextPage();
+  if (e.key==='ArrowLeft' ||e.key==='ArrowUp')   scrollMode ? prevCh() : prevPage();
+});
+
+// ── MODE TOGGLE ───────────────────────────────────────────────────────
+function toggleMode() {
+  scrollMode = !scrollMode;
+  const btn = document.getElementById('modeBtn');
+  btn.querySelector('.lbl').textContent = scrollMode ? 'Scroll' : 'Page';
+  btn.classList.toggle('on', !scrollMode);
+  if (pages.length) render();
+}
+
+// ── SIDEBAR ───────────────────────────────────────────────────────────
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+document.addEventListener('click', e => {
+  if (!e.target.closest('#sidebar') && !e.target.closest('[onclick="toggleSidebar()"]'))
+    document.getElementById('sidebar').classList.remove('open');
+});
+
+// ── BUILD CHAPTER UI ──────────────────────────────────────────────────
+function buildChapterUI() {
+  const sel  = document.getElementById('chSel');
+  const list = document.getElementById('sideList');
+  sel.innerHTML = list.innerHTML = '';
+  chapters.forEach(ch => {
+    const o = el('option'); o.value = ch; o.textContent = ch.toUpperCase();
+    sel.appendChild(o);
+    const row = el('div', 'ch-row'); row.dataset.ch = ch;
+    row.innerHTML = `<span>${ch.toUpperCase()}</span>
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>`;
+    row.onclick = () => { loadChapter(ch); document.getElementById('sidebar').classList.remove('open'); };
+    list.appendChild(row);
+  });
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+async function fetchHTML(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status} — ${url}`);
+  return r.text();
+}
+
+function parseLinks(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return [...doc.querySelectorAll('a[href]')]
+    .map(a => a.getAttribute('href').replace(/\/$/, '').split('/').pop())
+    .filter(n => n && n !== '..' && !n.startsWith('?') && !n.startsWith('#'));
+}
+
+function natSort(a, b) { return a.localeCompare(b, undefined, { numeric:true, sensitivity:'base' }); }
+
+function el(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
+
+function showLoader() {
+  document.getElementById('content').innerHTML =
+    '<div class="loader"><div class="loader-ring"></div><p>Chargement…</p></div>';
+}
+
+function showErr(title, msg) {
+  document.getElementById('content').innerHTML = `
+    <div class="err">
+      <div class="err-ico">📚</div>
+      <h2>${title}</h2>
+      <p>${msg}</p>
+      <a href="index.html" class="back-btn" style="margin-top:12px">← Retour</a>
+    </div>`;
+}
+
+// ── START ─────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
