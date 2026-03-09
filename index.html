@@ -3,183 +3,279 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Meru Puri — Scan Manga</title>
-<link rel="icon" type="image/x-icon" href="favicon.png">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<title>Ma Bibliothèque Manga</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0d0d0f;--surface:#141418;--border:#2a2a35;--accent:#c8a96e;--accent2:#7b5ea7;--text:#e8e0d5;--text-dim:#7a7080; }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);color:var(--text);font-family:'IM Fell English',serif;min-height:100vh;overflow-x:hidden;}
-  body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4;}
-  header{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:linear-gradient(180deg,#0a0a0c 0%,transparent 100%);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);gap:12px;flex-wrap:wrap;}
-  .logo{font-family:'Cinzel',serif;font-size:1.4rem;letter-spacing:0.12em;color:var(--accent);text-shadow:0 0 20px rgba(200,169,110,0.3);white-space:nowrap;}
-  .logo span{color:var(--text-dim);font-size:0.8rem;display:block;letter-spacing:0.25em;font-family:'IM Fell English',serif;font-style:italic;}
-  .controls{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-  .chapter-selector{display:flex;align-items:center;gap:10px;}
-  .chapter-selector label{font-size:0.8rem;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;}
-  select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 36px 8px 14px;border-radius:6px;font-family:'IM Fell English',serif;font-size:0.95rem;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7080' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;transition:border-color 0.2s;min-width:150px;}
-  select:hover{border-color:var(--accent2);}select:focus{outline:none;border-color:var(--accent);}
-  .progress-bar{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width 0.1s ease;z-index:200;}
-  .nav-bar{position:sticky;bottom:0;display:flex;align-items:center;justify-content:center;gap:16px;padding:14px 24px;background:linear-gradient(0deg,#0a0a0c 0%,transparent 100%);border-top:1px solid var(--border);backdrop-filter:blur(12px);z-index:100;}
-  .nav-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:6px;font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.1em;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
-  .nav-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(200,169,110,0.05);}
-  .nav-btn:disabled{opacity:0.3;cursor:not-allowed;border-color:var(--border);color:var(--text-dim);}
-  .page-counter{font-size:0.85rem;color:var(--text-dim);min-width:120px;text-align:center;font-style:italic;}
-  #reader{max-width:900px;margin:0 auto;padding:24px 16px 8px;}
-  .page-img{width:100%;display:block;margin-bottom:4px;border-radius:2px;opacity:0;animation:fadeIn 0.4s ease forwards;}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-  #single-page-container{display:none;flex-direction:column;align-items:center;}
-  #single-page-container.active{display:flex;}
-  #single-page-img{max-width:100%;max-height:85vh;object-fit:contain;border-radius:4px;box-shadow:0 20px 60px rgba(0,0,0,0.6);animation:fadeIn 0.3s ease forwards;}
-  #scroll-container{display:none;}#scroll-container.active{display:block;}
-  .mode-toggle{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:3px;}
-  .mode-btn{background:none;border:none;color:var(--text-dim);padding:6px 12px;border-radius:4px;cursor:pointer;font-size:0.75rem;letter-spacing:0.08em;font-family:'IM Fell English',serif;transition:all 0.2s;white-space:nowrap;}
-  .mode-btn.active{background:var(--accent2);color:white;}
-  .chap-nav{display:flex;align-items:center;gap:6px;}
-  .chap-arrow{background:var(--surface);border:1px solid var(--border);color:var(--text-dim);width:32px;height:32px;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all 0.2s;}
-  .chap-arrow:hover{border-color:var(--accent);color:var(--accent);}
-  .chap-arrow:disabled{opacity:0.3;cursor:not-allowed;}
-  .corner-deco{position:fixed;width:80px;height:80px;opacity:0.12;pointer-events:none;}
-  .corner-deco.tl{top:60px;left:0;}.corner-deco.br{bottom:60px;right:0;transform:rotate(180deg);}
-  .loading{text-align:center;padding:60px;color:var(--text-dim);font-style:italic;font-size:1.1rem;}
+  :root {
+    --bg: #0a0a0d;
+    --surface: #111116;
+    --surface2: #18181f;
+    --border: #242430;
+    --accent: #c8a96e;
+    --accent2: #7b5ea7;
+    --text: #e8e0d5;
+    --text-dim: #6a6275;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'IM Fell English', serif; min-height: 100vh; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); pointer-events: none; z-index: 9999; }
+
+  header { position: sticky; top: 0; z-index: 100; padding: 0 40px; height: 64px; display: flex; align-items: center; justify-content: space-between; background: rgba(10,10,13,0.88); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+  .logo { font-family: 'Cinzel', serif; font-size: 1.1rem; letter-spacing: 0.18em; color: var(--accent); text-shadow: 0 0 30px rgba(200,169,110,0.25); }
+  .logo sub { font-family: 'IM Fell English', serif; font-style: italic; font-size: 0.6rem; color: var(--text-dim); letter-spacing: 0.2em; display: block; margin-top: -2px; }
+  .book-count { font-size: 0.72rem; color: var(--text-dim); letter-spacing: 0.15em; font-style: italic; }
+
+  .hero { position: relative; z-index: 1; padding: 80px 40px 60px; text-align: center; }
+  .hero-ornament { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.5em; color: var(--accent2); opacity: 0.7; margin-bottom: 20px; }
+  .hero h1 { font-family: 'Cinzel', serif; font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700; letter-spacing: 0.1em; line-height: 1.15; }
+  .hero h1 em { color: var(--accent); font-style: normal; text-shadow: 0 0 40px rgba(200,169,110,0.35); }
+  .hero-line { width: 100px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); margin: 24px auto; }
+  .hero p { color: var(--text-dim); font-style: italic; font-size: 0.9rem; }
+
+  .filter-bar { position: sticky; top: 64px; z-index: 90; padding: 12px 40px; background: rgba(10,10,13,0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+  .filter-label { font-size: 0.68rem; letter-spacing: 0.2em; color: var(--text-dim); text-transform: uppercase; white-space: nowrap; }
+  .filter-tags { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tag-btn { background: none; border: 1px solid var(--border); color: var(--text-dim); padding: 5px 14px; border-radius: 20px; font-family: 'IM Fell English', serif; font-size: 0.78rem; cursor: pointer; transition: all 0.2s; }
+  .tag-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+  .tag-btn.active { background: var(--accent2); border-color: var(--accent2); color: white; }
+
+  .library { position: relative; z-index: 1; padding: 40px; max-width: 1400px; margin: 0 auto; }
+  .section-title { font-family: 'Cinzel', serif; font-size: 0.72rem; letter-spacing: 0.3em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 28px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+
+  .books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 28px; }
+
+  .book-card { opacity: 0; animation: cardIn 0.45s ease forwards; }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  .book-card a { text-decoration: none; color: inherit; display: block; }
+
+  .cover-wrap { position: relative; aspect-ratio: 2/3; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); background: var(--surface2); transition: transform 0.35s cubic-bezier(.25,.46,.45,.94), box-shadow 0.35s ease, border-color 0.35s; }
+  .book-card:hover .cover-wrap { transform: translateY(-6px) scale(1.02); box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(200,169,110,0.2); border-color: rgba(200,169,110,0.3); }
+
+  .cover-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cover-placeholder { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(135deg, var(--surface2) 0%, #1e1e28 100%); padding: 20px; text-align: center; }
+  .cover-placeholder .icon { font-size: 2.5rem; opacity: 0.3; }
+  .cover-placeholder .title-preview { font-family: 'Cinzel', serif; font-size: 0.72rem; letter-spacing: 0.1em; color: var(--text-dim); line-height: 1.4; }
+
+  .cover-overlay { position: absolute; inset: 0; background: linear-gradient(0deg, rgba(10,10,13,0.92) 0%, rgba(10,10,13,0.3) 50%, transparent 100%); opacity: 0; transition: opacity 0.3s; display: flex; flex-direction: column; justify-content: flex-end; padding: 14px; }
+  .book-card:hover .cover-overlay { opacity: 1; }
+  .read-btn { background: var(--accent); color: #0a0a0d; padding: 8px 0; border-radius: 4px; font-family: 'Cinzel', serif; font-size: 0.68rem; letter-spacing: 0.15em; text-align: center; font-weight: 700; }
+
+  .status-badge { position: absolute; top: 9px; right: 9px; padding: 3px 8px; border-radius: 3px; font-size: 0.58rem; letter-spacing: 0.1em; font-family: 'Cinzel', serif; font-weight: 600; text-transform: uppercase; backdrop-filter: blur(4px); }
+  .status-badge.ongoing { background: rgba(78,140,160,0.85); color: white; }
+  .status-badge.complete { background: rgba(123,94,167,0.85); color: white; }
+  .status-badge.new { background: rgba(200,169,110,0.9); color: #0a0a0d; }
+
+  .card-info { padding: 11px 2px 0; }
+  .card-title { font-family: 'Cinzel', serif; font-size: 0.82rem; letter-spacing: 0.05em; color: var(--text); margin-bottom: 4px; line-height: 1.3; transition: color 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .book-card:hover .card-title { color: var(--accent); }
+  .card-meta { font-size: 0.7rem; color: var(--text-dim); font-style: italic; display: flex; align-items: center; gap: 6px; }
+  .card-meta .dot { opacity: 0.4; }
+  .card-chapters { font-size: 0.66rem; color: var(--text-dim); margin-top: 4px; }
+
+  .empty-state { text-align: center; padding: 80px 40px; color: var(--text-dim); display: none; }
+  .empty-state.visible { display: block; }
+  .empty-state h3 { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 0.15em; margin-bottom: 12px; }
+  .empty-state p { font-style: italic; font-size: 0.88rem; }
+
+  footer { position: relative; z-index: 1; text-align: center; padding: 40px; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.72rem; letter-spacing: 0.1em; font-style: italic; margin-top: 60px; }
+
+  .scroll-top { position: fixed; bottom: 28px; right: 28px; width: 38px; height: 38px; background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim); border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all 0.2s; z-index: 50; opacity: 0; pointer-events: none; }
+  .scroll-top.visible { opacity: 1; pointer-events: auto; }
+  .scroll-top:hover { border-color: var(--accent); color: var(--accent); }
+
+  @media (max-width: 600px) {
+    header { padding: 0 16px; }
+    .hero { padding: 50px 20px 36px; }
+    .filter-bar { padding: 10px 16px; }
+    .library { padding: 24px 16px; }
+    .books-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 16px; }
+    footer { padding: 28px 16px; }
+  }
 </style>
 </head>
 <body>
-<div class="progress-bar" id="progressBar"></div>
-<svg class="corner-deco tl" viewBox="0 0 80 80" fill="none"><path d="M0 80 L0 0 L80 0" stroke="#c8a96e" stroke-width="1.5"/><circle cx="0" cy="0" r="4" fill="#c8a96e" opacity="0.5"/></svg>
-<svg class="corner-deco br" viewBox="0 0 80 80" fill="none"><path d="M0 80 L0 0 L80 0" stroke="#c8a96e" stroke-width="1.5"/><circle cx="0" cy="0" r="4" fill="#c8a96e" opacity="0.5"/></svg>
 
 <header>
-  <div class="logo">Meru Puri<span>Märchen ✦ Prince</span></div>
-  <div class="controls">
-    <div class="mode-toggle">
-      <button class="mode-btn active" id="modeScroll" onclick="setMode('scroll')">Défilement</button>
-      <button class="mode-btn" id="modePage" onclick="setMode('page')">Page/page</button>
-    </div>
-    <div class="chapter-selector">
-      <label>Chapitre</label>
-      <div class="chap-nav">
-        <button class="chap-arrow" id="prevChapBtn" onclick="changeChapter(-1)" disabled>‹</button>
-        <select id="chapterSelect" onchange="loadChapter(parseInt(this.value))">
-          <option value="1" selected>Tome 1 (Chapitre 1)</option>
-          <option value="2">Tome 1 (Chapitre 2)</option>
-          <option value="3">Tome 1 (Chapitre 3)</option>
-          <option value="4">Tome 1 (Chapitre 4)</option>
-          <option value="5">Tome 1 (Chapitre 5)</option>
-          <option value="6">Tome 2 (Chapitre 6)</option>
-          <option value="6">Tome 2 (Chapitre 6)</option>
-          <option value="6">Tome 2 (Chapitre 7)</option>
-          <option value="6">Tome 2 (Chapitre 8)</option>
-          <option value="6">Tome 2 (Chapitre 9)</option>
-          <option value="6">Tome 2 (Chapitre 10)</option>
-          <option value="6">Tome 2 (Chapitre 11)</option>
-          <option value="6">Tome 3 Comming Soon...</option>
-        </select>
-        <button class="chap-arrow" id="nextChapBtn" onclick="changeChapter(1)">›</button>
-      </div>
-    </div>
+  <div class="logo">
+    BIBLIOTHÈQUE
+    <sub>✦ Collection de Scans ✦</sub>
   </div>
+  <span class="book-count" id="bookCount"></span>
 </header>
 
-<div id="reader">
-  <div id="scroll-container" class="active"></div>
-  <div id="single-page-container"><img id="single-page-img" src="" alt="Page manga"/></div>
+<div class="hero">
+  <p class="hero-ornament">✦ &nbsp; MANGA &nbsp;·&nbsp; WEBTOON &nbsp;·&nbsp; SCAN &nbsp; ✦</p>
+  <h1>Ma <em>Bibliothèque</em><br>de Scans</h1>
+  <div class="hero-line"></div>
+  <p>Retrouvez tous vos scans préférés en un seul endroit</p>
 </div>
 
-<div class="nav-bar" id="navBar" style="display:none;">
-  <button class="nav-btn" id="prevBtn" onclick="changePage(-1)" disabled>← Précédente</button>
-  <span class="page-counter" id="pageCounter"></span>
-  <button class="nav-btn" id="nextBtn" onclick="changePage(1)">Suivante →</button>
+<div class="filter-bar">
+  <span class="filter-label">Filtrer</span>
+  <div class="filter-tags" id="filterTags">
+    <button class="tag-btn active" onclick="filterBooks('all', this)">Tout</button>
+  </div>
 </div>
+
+<main class="library">
+  <p class="section-title" id="sectionLabel">Toute la collection</p>
+  <div class="books-grid" id="booksGrid"></div>
+  <div class="empty-state" id="emptyState">
+    <h3>Aucun résultat</h3>
+    <p>Aucun manga ne correspond à ce filtre.</p>
+  </div>
+</main>
+
+<footer>
+  Collection personnelle de scans &nbsp;·&nbsp; Hébergé sur GitHub Pages
+</footer>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
 
 <script>
-// Nombre de pages par chapitre
-const chapterPageCounts = { 1: 24, 2: 16, 3: 17, 4: 16, 5: 21, 6: 20, 7: 13, 8: 18, 9: 16, 10: 16, 11: 17 };
-const totalChapters = 11;
-let currentMode = 'scroll', currentPage = 0, currentChapter = 1;
+// ════════════════════════════════════════════════════════════════
+//  📚  AJOUTE TES LIVRES ICI
+//
+//  Structure de dossier attendue :
+//    livres/
+//      nom-du-livre/
+//        cover.jpg          ← couverture (affichée sur l'index)
+//        ch1/1.jpg, 2.jpg…  ← pages du chapitre 1
+//        ch2/1.jpg, 2.jpg…
+//        …
+//
+//  Pour chaque livre, renseigne :
+//    id            → nom du dossier (sans espaces)
+//    title         → titre affiché
+//    subtitle      → sous-titre (optionnel)
+//    author        → auteur (optionnel)
+//    genre         → tableau de genres (génère les filtres automatiquement)
+//    status        → "ongoing" | "complete" | "new"
+//    cover         → chemin vers cover.jpg
+//    reader        → laisse "reader.html?book=TON_ID" tel quel
+//    chapters      → tableau des chapitres, chaque entrée = { label, pages }
+//                    pages = nombre de fichiers jpg dans ce sous-dossier
+// ════════════════════════════════════════════════════════════════
+const BOOKS = [
 
-function getPageUrl(ch, page) {
-  return `ch${ch}/${page}.jpg`;
+  {
+    id: "meru-puri",
+    title: "Meru Puri",
+    subtitle: "Märchen Prince",
+    author: "Matsuri Hino",
+    genre: ["Shojo", "Romance", "Fantasy"],
+    status: "complete",
+    cover: "livres/meru-puri/cover.jpg",
+    reader: "reader.html?book=meru-puri",
+    chapters: [
+      { label: "Tome 1 — Chapitre 1", pages: 24 },
+      { label: "Tome 1 — Chapitre 2", pages: 16 },
+      { label: "Tome 1 — Chapitre 3", pages: 17 },
+      { label: "Tome 1 — Chapitre 4", pages: 16 },
+      { label: "Tome 1 — Chapitre 5", pages: 21 },
+      { label: "Tome 2 — Chapitre 6",  pages: 20 },
+      { label: "Tome 2 — Chapitre 7",  pages: 13 },
+      { label: "Tome 2 — Chapitre 8",  pages: 18 },
+      { label: "Tome 2 — Chapitre 9",  pages: 16 },
+      { label: "Tome 2 — Chapitre 10", pages: 16 },
+      { label: "Tome 2 — Chapitre 11", pages: 17 },
+    ]
+  },
+
+  // ── Copie ce bloc pour ajouter un nouveau livre ──────────────
+  // {
+  //   id: "nom-du-livre",          // ← même nom que le dossier dans livres/
+  //   title: "Titre",
+  //   subtitle: "",
+  //   author: "Auteur",
+  //   genre: ["Shonen", "Action"],
+  //   status: "ongoing",           // ongoing | complete | new
+  //   cover: "livres/nom-du-livre/cover.jpg",
+  //   reader: "reader.html?book=nom-du-livre",
+  //   chapters: [
+  //     { label: "Chapitre 1", pages: 20 },
+  //     { label: "Chapitre 2", pages: 18 },
+  //   ]
+  // },
+  // ─────────────────────────────────────────────────────────────
+
+];
+
+// ── Rendu (ne pas toucher) ──────────────────────────────────────
+
+let currentFilter = 'all';
+
+function renderBooks(books) {
+  const grid = document.getElementById('booksGrid');
+  const empty = document.getElementById('emptyState');
+  grid.innerHTML = '';
+  empty.classList.toggle('visible', books.length === 0);
+  if (!books.length) return;
+
+  const statusLabel = { ongoing: 'En cours', complete: 'Terminé', new: 'Nouveau' };
+
+  books.forEach((book, i) => {
+    const totalChapters = book.chapters?.length || 0;
+    const card = document.createElement('div');
+    card.className = 'book-card';
+    card.style.animationDelay = (i * 0.06) + 's';
+    card.innerHTML = `
+      <a href="${book.reader}">
+        <div class="cover-wrap">
+          ${book.cover
+            ? `<img src="${book.cover}" alt="${book.title}" loading="lazy"
+                onerror="this.outerHTML='<div class=cover-placeholder><div class=icon>📖</div><div class=title-preview>${book.title}</div></div>'">`
+            : `<div class="cover-placeholder"><div class="icon">📖</div><div class="title-preview">${book.title}</div></div>`}
+          ${book.status ? `<span class="status-badge ${book.status}">${statusLabel[book.status]||''}</span>` : ''}
+          <div class="cover-overlay"><div class="read-btn">LIRE</div></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">${book.title}</div>
+          <div class="card-meta">
+            ${book.author ? `<span>${book.author}</span>` : ''}
+            ${book.genre?.length ? `<span class="dot">·</span><span>${book.genre[0]}</span>` : ''}
+          </div>
+          <div class="card-chapters">${totalChapters} chapitre${totalChapters > 1 ? 's' : ''}</div>
+        </div>
+      </a>`;
+    grid.appendChild(card);
+  });
 }
 
-function setMode(mode) {
-  currentMode = mode;
-  document.getElementById('modeScroll').classList.toggle('active', mode === 'scroll');
-  document.getElementById('modePage').classList.toggle('active', mode === 'page');
-  document.getElementById('scroll-container').classList.toggle('active', mode === 'scroll');
-  document.getElementById('single-page-container').classList.toggle('active', mode === 'page');
-  document.getElementById('navBar').style.display = mode === 'page' ? 'flex' : 'none';
-  if (mode === 'page') { currentPage = 0; updateSinglePage(); }
-  if (mode === 'scroll') updateProgress();
-}
-
-function loadChapterImages(ch) {
-  const count = chapterPageCounts[ch];
-  const c = document.getElementById('scroll-container');
-  c.innerHTML = '<div class="loading">Chargement...</div>';
-  // Use a small delay to let the loading message render
-  setTimeout(() => {
-    c.innerHTML = '';
-    for (let i = 1; i <= count; i++) {
-      const img = document.createElement('img');
-      img.className = 'page-img';
-      img.src = getPageUrl(ch, i);
-      img.alt = 'Page ' + i;
-      img.style.animationDelay = (i * 0.03) + 's';
-      c.appendChild(img);
-    }
-  }, 50);
-}
-
-function loadChapter(num) {
-  currentChapter = num;
-  currentPage = 0;
-  document.getElementById('chapterSelect').value = num;
-  document.getElementById('prevChapBtn').disabled = num <= 1;
-  document.getElementById('nextChapBtn').disabled = num >= totalChapters;
-  loadChapterImages(num);
-  updateSinglePage();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function changeChapter(dir) {
-  const next = currentChapter + dir;
-  if (next >= 1 && next <= totalChapters) loadChapter(next);
-}
-
-function updateSinglePage() {
-  const count = chapterPageCounts[currentChapter];
-  const img = document.getElementById('single-page-img');
-  img.style.animation = 'none'; img.offsetHeight;
-  img.src = getPageUrl(currentChapter, currentPage + 1);
-  img.style.animation = 'fadeIn 0.3s ease forwards';
-  document.getElementById('pageCounter').textContent = 'Page ' + (currentPage + 1) + ' / ' + count;
-  document.getElementById('prevBtn').disabled = currentPage === 0;
-  document.getElementById('nextBtn').disabled = currentPage === count - 1;
-}
-
-function changePage(dir) {
-  const count = chapterPageCounts[currentChapter];
-  currentPage = Math.max(0, Math.min(count - 1, currentPage + dir));
-  updateSinglePage();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function updateProgress() {
-  const pct = document.documentElement.scrollHeight - window.innerHeight > 0
-    ? (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100 : 0;
-  document.getElementById('progressBar').style.width = pct + '%';
-}
-
-window.addEventListener('scroll', updateProgress);
-document.addEventListener('keydown', e => {
-  if (currentMode === 'page') {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changePage(1);
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') changePage(-1);
+function filterBooks(filter, btn) {
+  currentFilter = filter;
+  document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const label = document.getElementById('sectionLabel');
+  if (filter === 'all') {
+    renderBooks(BOOKS);
+    label.textContent = 'Toute la collection';
+  } else {
+    const filtered = BOOKS.filter(b => b.genre?.includes(filter));
+    renderBooks(filtered);
+    label.textContent = filter;
   }
-});
+}
 
-loadChapterImages(1);
+function buildFilters() {
+  const genres = [...new Set(BOOKS.flatMap(b => b.genre || []))].sort();
+  const container = document.getElementById('filterTags');
+  genres.forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'tag-btn';
+    btn.textContent = g;
+    btn.onclick = () => filterBooks(g, btn);
+    container.appendChild(btn);
+  });
+}
+
+document.getElementById('bookCount').textContent = BOOKS.length + ' livre' + (BOOKS.length > 1 ? 's' : '');
+window.addEventListener('scroll', () =>
+  document.getElementById('scrollTop').classList.toggle('visible', window.scrollY > 300));
+
+buildFilters();
+renderBooks(BOOKS);
 </script>
 </body>
 </html>
